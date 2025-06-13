@@ -1,4 +1,4 @@
-# 🎉 Confettify - Click Confetti Extension
+# 🎉 Confettify - Add more confetti to your life
 
 A fun Chrome extension that creates colorful confetti wherever you click on any webpage!
 
