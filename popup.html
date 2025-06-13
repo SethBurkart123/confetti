@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      margin: 0;
+      background: #f8f9fa;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      color: #333;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .header p {
+      margin: 5px 0 0 0;
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .setting-group {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .setting-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .setting-label {
+      font-weight: 500;
+      color: #333;
+      flex: 1;
+    }
+    
+    .setting-control {
+      flex: 0 0 auto;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: #ccc;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .toggle-switch.active {
+      background: #4CAF50;
+    }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    .toggle-switch.active::after {
+      left: 28px;
+    }
+    
+    .slider {
+      width: 100px;
+      margin: 0;
+    }
+    
+    .slider-value {
+      min-width: 30px;
+      text-align: right;
+      color: #666;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    
+    .slider-container {
+      display: flex;
+      align-items: center;
+    }
+    
+    .global-toggle {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      margin-bottom: 15px;
+      display: flex;
+    }
+    
+    .global-toggle h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+    
+    .global-toggle .toggle-switch {
+      margin-left: auto;
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .global-toggle .toggle-switch.active {
+      background: #00c868;
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+    }
+    
+    .disabled-overlay {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      color: #999;
+      font-size: 11px;
+    }
+    
+    .reset-button {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-bottom: 10px;
+    }
+    
+    .reset-button:hover {
+      background: #ff5252;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎉 Confettify</h1>
+    <p>Click anywhere to create confetti!</p>
+  </div>
+  
+  <div class="global-toggle">
+    <h2>Extension Status</h2>
+    <div class="toggle-switch active" id="globalToggle"></div>
+  </div>
+  
+  <div id="settingsContainer">
+    <div class="setting-group">
+      <div class="setting-row">
+        <div class="setting-label">Particle Count</div>
+        <div class="setting-control">
+          <div class="slider-container">
+            <input type="range" class="slider" id="particleCount" min="10" max="200" value="75">
+            <span class="slider-value" id="particleCountValue">75</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-row">
+        <div class="setting-label">Explosion Power</div>
+        <div class="setting-control">
+          <div class="slider-container">
+            <input type="range" class="slider" id="explosionPower" min="5" max="50" value="25">
+            <span class="slider-value" id="explosionPowerValue">25</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-row">
+        <div class="setting-label">Particle Size</div>
+        <div class="setting-control">
+          <div class="slider-container">
+            <input type="range" class="slider" id="particleSize" min="0.5" max="3" step="0.1" value="1">
+            <span class="slider-value" id="particleSizeValue">1.0</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-row">
+        <div class="setting-label">Gravity</div>
+        <div class="setting-control">
+          <div class="slider-container">
+            <input type="range" class="slider" id="gravity" min="1" max="30" value="10">
+            <span class="slider-value" id="gravityValue">10</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="setting-group">
+      <div class="setting-row">
+        <div class="setting-label">Fade Effect</div>
+        <div class="setting-control">
+          <div class="toggle-switch" id="fadeToggle"></div>
+        </div>
+      </div>
+      
+      <div class="setting-row" id="fadeSpeedRow" style="display: none;">
+        <div class="setting-label">Fade Speed</div>
+        <div class="setting-control">
+          <div class="slider-container">
+            <input type="range" class="slider" id="fadeSpeed" min="0.1" max="5" step="0.1" value="1">
+            <span class="slider-value" id="fadeSpeedValue">1.0</span>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  <div class="footer">
+    <button class="reset-button" id="resetButton">Reset to Defaults</button>
+    <div>Settings are saved automatically</div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
