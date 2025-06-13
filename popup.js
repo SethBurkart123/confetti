@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // Cross-browser API compatibility
+  const browserAPI = (typeof browser !== 'undefined') ? browser : chrome;
+  
   const defaultSettings = {
     enabled: true,
     particleCount: 75,
@@ -28,22 +31,82 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   function loadSettings() {
-    chrome.storage.sync.get(defaultSettings, function(settings) {
-      updateUI(settings);
-    });
+    try {
+      const result = browserAPI.storage.sync.get(defaultSettings);
+      if (result && typeof result.then === 'function') {
+        // Promise-based (Firefox)
+        result.then(function(settings) {
+          updateUI(settings || defaultSettings);
+        }).catch(function(error) {
+          console.log('Failed to load settings, using defaults:', error);
+          updateUI(defaultSettings);
+        });
+      } else {
+        // Callback-based (Chrome) - shouldn't reach here but just in case
+        browserAPI.storage.sync.get(defaultSettings, function(settings) {
+          updateUI(settings || defaultSettings);
+        });
+      }
+    } catch (error) {
+      // Fallback to callback style for Chrome
+      browserAPI.storage.sync.get(defaultSettings, function(settings) {
+        if (browserAPI.runtime.lastError) {
+          console.log('Storage error:', browserAPI.runtime.lastError);
+          updateUI(defaultSettings);
+          return;
+        }
+        updateUI(settings || defaultSettings);
+      });
+    }
   }
 
   function saveSettings(newSettings) {
-    chrome.storage.sync.set(newSettings, function() {
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            action: 'updateSettings',
-            settings: newSettings
+    try {
+      const result = browserAPI.storage.sync.set(newSettings);
+      if (result && typeof result.then === 'function') {
+        // Promise-based (Firefox)
+        result.then(function() {
+          return browserAPI.tabs.query({active: true, currentWindow: true});
+        }).then(function(tabs) {
+          if (tabs[0]) {
+            return browserAPI.tabs.sendMessage(tabs[0].id, {
+              action: 'updateSettings',
+              settings: newSettings
+            });
+          }
+        }).catch(function(error) {
+          console.log('Failed to save settings:', error);
+        });
+      } else {
+        // Callback-based (Chrome) - shouldn't reach here but just in case
+        browserAPI.storage.sync.set(newSettings, function() {
+          browserAPI.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            if (tabs[0]) {
+              browserAPI.tabs.sendMessage(tabs[0].id, {
+                action: 'updateSettings',
+                settings: newSettings
+              });
+            }
           });
+        });
+      }
+    } catch (error) {
+      // Fallback to callback style for Chrome
+      browserAPI.storage.sync.set(newSettings, function() {
+        if (browserAPI.runtime.lastError) {
+          console.log('Storage error:', browserAPI.runtime.lastError);
+          return;
         }
+        browserAPI.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          if (tabs[0]) {
+            browserAPI.tabs.sendMessage(tabs[0].id, {
+              action: 'updateSettings',
+              settings: newSettings
+            });
+          }
+        });
       });
-    });
+    }
   }
 
   function updateUI(settings) {

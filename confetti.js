@@ -449,6 +449,9 @@ class Vector {
 (function() {
     'use strict';
     
+    // Cross-browser API compatibility
+    const browserAPI = (typeof browser !== 'undefined') ? browser : chrome;
+    
     let confetti;
     let isEnabled = true;
     
@@ -496,15 +499,57 @@ class Vector {
         }
     }
     
-    chrome.storage.sync.get(defaultSettings, function(settings) {
-        isEnabled = settings.enabled;
-        
-        if (settings.enabled) {
-            initializeConfetti(settings);
+    // Handle both promise-based (Firefox) and callback-based (Chrome) APIs
+    function loadSettings() {
+        try {
+            const result = browserAPI.storage.sync.get(defaultSettings);
+            if (result && typeof result.then === 'function') {
+                // Promise-based (Firefox)
+                result.then(function(settings) {
+                    isEnabled = settings.enabled;
+                    if (settings.enabled) {
+                        initializeConfetti(settings);
+                    }
+                }).catch(function(error) {
+                    console.log('Failed to load settings, using defaults:', error);
+                    initializeConfetti(defaultSettings);
+                });
+            } else {
+                // Callback-based (Chrome) - shouldn't reach here but just in case
+                browserAPI.storage.sync.get(defaultSettings, function(settings) {
+                    if (settings) {
+                        isEnabled = settings.enabled;
+                        if (settings.enabled) {
+                            initializeConfetti(settings);
+                        }
+                    } else {
+                        initializeConfetti(defaultSettings);
+                    }
+                });
+            }
+        } catch (error) {
+            // Fallback to callback style for Chrome
+            browserAPI.storage.sync.get(defaultSettings, function(settings) {
+                if (browserAPI.runtime.lastError) {
+                    console.log('Storage error:', browserAPI.runtime.lastError);
+                    initializeConfetti(defaultSettings);
+                    return;
+                }
+                if (settings) {
+                    isEnabled = settings.enabled;
+                    if (settings.enabled) {
+                        initializeConfetti(settings);
+                    }
+                } else {
+                    initializeConfetti(defaultSettings);
+                }
+            });
         }
-    });
+    }
     
-    chrome.runtime.onMessage.addListener(function(request, _sender, sendResponse) {
+    loadSettings();
+    
+    browserAPI.runtime.onMessage.addListener(function(request, _sender, sendResponse) {
         if (request.action === 'updateSettings') {
             const settings = request.settings;
             
